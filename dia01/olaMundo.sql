@@ -1,5 +1,5 @@
 -- Databricks notebook source
-SELECT 'OLÁ MUNDO!'
+SELECT 'OLÁ MUNDO!' ola_mundo, 21*2 produto
 
 -- COMMAND ----------
 
