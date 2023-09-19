@@ -1,0 +1,197 @@
+Exemplos de SQL
+SQL Recursivo de CRs
+
+1
+
+/*Exemplo 1*/
+
+2
+
+ 
+
+3
+
+SELECT CONCAT(LPAD(' ',LEVEL*3-3),VW.CODUNIDADM || '.' || VW.NOMEUNIDADM) AS DESCRICAO
+
+4
+
+       ,DECODE(TIPOGRUPO,'S','SECRETARIA','D','DEPARTAMENTO','G','GERENCIA','E','ENCARREGATURA',TIPOGRUPO) AS TIPOGRUPO
+
+5
+
+       ,CODGRUPO   AS CR_PAI
+
+6
+
+       ,CODUNIDADM AS CR
+
+7
+
+       ,LEVEL
+
+8
+
+  FROM (SELECT *
+
+9
+
+         FROM CR M
+
+10
+
+        WHERE TO_NUMBER(M.CODUNIDADM) NOT IN (40413,40823)) VW
+
+11
+
+CONNECT BY PRIOR TO_NUMBER(VW.CODUNIDADM) = TO_NUMBER(VW.CODGRUPO)
+
+12
+
+     START WITH TO_NUMBER(VW.CODGRUPO) >= 0;
+
+13
+
+ 
+
+14
+
+ 
+
+15
+
+/*Exemplo 2 - Com os Responsaveis*/
+
+16
+
+ 
+
+17
+
+SELECT COD_CR_PAI                                                                                   AS CR_PAI
+
+18
+
+       ,COD_CR                                                                                      AS CR
+
+19
+
+       ,CONCAT(LPAD('.',LEVEL*5-5,'.'),VW.COD_CR  || '.' || VW.DSC_CR)                              AS DESCRICAO
+
+20
+
+       ,DSC_CR_ABREVIACAO                                                                           AS ABREVIACAO
+
+21
+
+       ,DSC_CR_SIGLA                                                                                AS SIGLA
+
+22
+
+       ,DECODE(IND_TIPO,'S','SECRETARIA','D','DEPARTAMENTO','G','GERENCIA','E','ENCARREGATURA','P','PREFETURA MUNICIPAL',IND_TIPO)
+
+23
+
+                                                                                                    AS TIPO
+
+24
+
+       ,(SELECT RTRIM(XMLAGG(XMLELEMENT(E,C.DSC_NOME_SERVIDOR || chr(10))).EXTRACT('//text()'), chr(10)) FROM BDM_CR_RESPONSAVEIS C WHERE COD_LOTACAO = COD_CR AND NIVEL = 0)
+
+25
+
+                                                                                                    AS PREFEITO
+
+26
+
+       ,(SELECT RTRIM(XMLAGG(XMLELEMENT(E,C.DSC_NOME_SERVIDOR || chr(10))).EXTRACT('//text()'), chr(10)) FROM BDM_CR_RESPONSAVEIS C WHERE COD_LOTACAO = COD_CR AND NIVEL = 1)
+
+27
+
+                                                                                                    AS SECRETARIO
+
+28
+
+       ,(SELECT RTRIM(XMLAGG(XMLELEMENT(E,C.DSC_NOME_SERVIDOR || chr(10))).EXTRACT('//text()'), chr(10)) FROM BDM_CR_RESPONSAVEIS C WHERE COD_LOTACAO = COD_CR AND NIVEL = 2)
+
+29
+
+                                                                                                    AS DIRETOR
+
+30
+
+       ,(SELECT RTRIM(XMLAGG(XMLELEMENT(E,C.DSC_NOME_SERVIDOR || chr(10))).EXTRACT('//text()'), chr(10)) FROM BDM_CR_RESPONSAVEIS C WHERE COD_LOTACAO = COD_CR AND NIVEL = 3)
+
+31
+
+                                                                                                    AS ASSISTENTE
+
+32
+
+       ,(SELECT RTRIM(XMLAGG(XMLELEMENT(E,C.DSC_NOME_SERVIDOR || chr(10))).EXTRACT('//text()'), chr(10)) FROM BDM_CR_RESPONSAVEIS C WHERE COD_LOTACAO = COD_CR AND NIVEL = 4)
+
+33
+
+                                                                                                    AS GERENTE
+
+34
+
+  FROM (SELECT M.COD_CR
+
+35
+
+               ,M.COD_CR_PAI AS COD_CR_PAI
+
+36
+
+               ,M.DSC_CR
+
+37
+
+               ,M.DSC_CR_ABREVIACAO
+
+38
+
+               ,M.DSC_CR_SIGLA
+
+39
+
+               ,M.IND_TIPO
+
+40
+
+               ,M.COD_RESPONSAVEL_1
+
+41
+
+               ,M.COD_RESPONSAVEL_2
+
+42
+
+          FROM BDM_CR M
+
+43
+
+         WHERE M.COD_CR       NOT IN (40413,40823)
+
+44
+
+           AND M.DTA_EXCLUSAO IS NULL) VW
+
+45
+
+       CONNECT BY PRIOR VW.COD_CR                = TO_NUMBER(VW.COD_CR_PAI)
+
+46
+
+             START WITH TO_NUMBER(VW.COD_CR_PAI) >= 0
+
+47
+
+                    AND TO_NUMBER(VW.COD_CR)     = 10000;
+
+48
+
+        
+
+
+Resultados
